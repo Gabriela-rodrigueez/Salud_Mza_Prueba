@@ -1,0 +1,71 @@
+```
+-- 1. Crear la base de datos
+CREATE DATABASE IF NOT EXISTS saludmza_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE saludmza_db;
+
+-- 2. Tabla 'usuarios' (almacena credenciales y roles)
+CREATE TABLE IF NOT EXISTS usuarios (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    rol VARCHAR(50) NOT NULL
+);
+
+-- 3. Tabla 'pacientes' (mapeada a Paciente.java con relación 1:1 a Usuario)
+CREATE TABLE IF NOT EXISTS pacientes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT UNIQUE,
+    nombre_completo VARCHAR(255),
+    dni VARCHAR(50) NOT NULL UNIQUE,
+    fecha_nacimiento VARCHAR(50),
+    genero VARCHAR(50),
+    direccion VARCHAR(255),
+    telefono VARCHAR(50),
+    tiene_obra_social BOOLEAN,
+    nombre_obra_social VARCHAR(255),
+    legajo_obra_social VARCHAR(100),
+    plan_obra_social VARCHAR(100),
+    CONSTRAINT fk_paciente_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 4. Tabla 'medicos' (mapeada a Medico.java con relación 1:1 a Usuario)
+CREATE TABLE IF NOT EXISTS medicos (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT UNIQUE,
+    nombre_completo VARCHAR(255),
+    matricula_profesional VARCHAR(100) NOT NULL UNIQUE,
+    CONSTRAINT fk_medico_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 5. Tabla 'administradores' (mapeada a Administrador.java con relación 1:1 a Usuario)
+CREATE TABLE IF NOT EXISTS administradores (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT UNIQUE,
+    nombre_completo VARCHAR(255),
+    legajo VARCHAR(100) UNIQUE,
+    usuario_red VARCHAR(100) UNIQUE,
+    CONSTRAINT fk_admin_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+```
+
+---
+
+### 2\. Script de Datos Iniciales de Prueba (`data.sql`)
+
+Como los pacientes pueden registrarse directamente a través del formulario HTML, insertamos datos iniciales para evaluar el inicio de sesión de un **Médico** y de un **Administrador**:
+
+```
+USE saludmza_db;
+
+-- Insertar Médico de prueba
+INSERT INTO usuarios (email, password, rol) VALUES ('medico@saludmza.com', 'medico123', 'MEDICO');
+INSERT INTO medicos (usuario_id, nombre_completo, matricula_profesional) 
+VALUES (LAST_INSERT_ID(), 'Dr. Roberto Gómez', 'MP-88492');
+
+-- Insertar Administrador de prueba (inicia por Legajo o por Usuario de Red)
+INSERT INTO usuarios (email, password, rol) VALUES ('admin@saludmza.com', 'admin123', 'ADMINISTRADOR');
+INSERT INTO administradores (usuario_id, nombre_completo, legajo, usuario_red) 
+VALUES (LAST_INSERT_ID(), 'Lic. Ana Martínez', 'ADM-001', 'admin_red');
+
+```
